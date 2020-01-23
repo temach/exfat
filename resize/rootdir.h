@@ -23,7 +23,7 @@
 #ifndef MKFS_ROOTDIR_H_INCLUDED
 #define MKFS_ROOTDIR_H_INCLUDED
 
-#include "mkexfat.h"
+#include "resize_exfat.h"
 
 extern const struct fs_object rootdir;
 

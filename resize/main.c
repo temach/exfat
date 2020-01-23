@@ -54,7 +54,7 @@ static struct
 	off_t volume_size;
 	le16_t volume_label[EXFAT_ENAME_MAX + 1];
 	uint32_t volume_serial;
-	uint64_t first_sector;
+	uint64_t first_sector;  // PartitionOffset in spec, useless
 }
 param;
 
@@ -156,11 +156,11 @@ static uint32_t setup_volume_serial(uint32_t user_defined)
 
 static int setup(struct exfat_dev* dev, int sector_bits, int spc_bits,
 		const char* volume_label, uint32_t volume_serial,
-		uint64_t first_sector)
+		uint64_t first_sector, off_t volume_new_size)
 {
 	param.sector_bits = sector_bits;
 	param.first_sector = first_sector;
-	param.volume_size = exfat_get_size(dev);
+	param.volume_size = volume_new_size;
 
 	param.spc_bits = setup_spc_bits(sector_bits, spc_bits, param.volume_size);
 	if (param.spc_bits == -1)
@@ -173,7 +173,7 @@ static int setup(struct exfat_dev* dev, int sector_bits, int spc_bits,
 	if (param.volume_serial == 0)
 		return 1;
 
-	return mkfs(dev, param.volume_size);
+	return 0;
 }
 
 static int logarithm2(int n)
@@ -188,47 +188,30 @@ static int logarithm2(int n)
 
 static void usage(const char* prog)
 {
-	fprintf(stderr, "Usage: %s [-i volume-id] [-n label] "
-			"[-p partition-first-sector] "
-			"[-s sectors-per-cluster] [-V] <device>\n", prog);
+	fprintf(stderr, "Usage: %s [-s partition-new-size-bytes] "
+			"[-V] <device>\n", prog);
 	exit(1);
 }
 
 int main(int argc, char* argv[])
 {
+    struct exfat ef;
 	const char* spec = NULL;
 	int opt;
-	int spc_bits = -1;
-	const char* volume_label = NULL;
-	uint32_t volume_serial = 0;
-	uint64_t first_sector = 0;
+	off_t volume_new_size = 0;
 	struct exfat_dev* dev;
 
-	printf("mkexfatfs %s\n", VERSION);
+	printf("resize_exfat %s\n", VERSION);
 
-	while ((opt = getopt(argc, argv, "i:n:p:s:V")) != -1)
+	while ((opt = getopt(argc, argv, "s:V")) != -1)
 	{
 		switch (opt)
 		{
-		case 'i':
-			volume_serial = strtol(optarg, NULL, 16);
-			break;
-		case 'n':
-			volume_label = optarg;
-			break;
-		case 'p':
-			first_sector = strtoll(optarg, NULL, 10);
-			break;
 		case 's':
-			spc_bits = logarithm2(atoi(optarg));
-			if (spc_bits < 0)
-			{
-				exfat_error("invalid option value: '%s'", optarg);
-				return 1;
-			}
+			volume_new_size = strtol(optarg, NULL, 10);
 			break;
 		case 'V':
-			puts("Copyright (C) 2011-2018  Andrew Nayenko");
+			puts("Copyright (C) 2011-2018  Anon");
 			return 0;
 		default:
 			usage(argv[0]);
@@ -239,17 +222,23 @@ int main(int argc, char* argv[])
 		usage(argv[0]);
 	spec = argv[optind];
 
-	dev = exfat_open(spec, EXFAT_MODE_RW);
-	if (dev == NULL)
-		return 1;
-	if (setup(dev, 9, spc_bits, volume_label, volume_serial,
-				first_sector) != 0)
+	if(exfat_mount(&ef, spec, "rw") != 0)
+        return 1;
+	if (setup(dev, 9, -1, NULL, 0, 0, volume_new_size) != 0)
 	{
-		exfat_close(dev);
+		exfat_unmount(&ef);
 		return 1;
 	}
-	if (exfat_close(dev) != 0)
-		return 1;
-	printf("File system created successfully.\n");
+	struct exfat_super_block sb;
+	init_sb(&sb);
+
+    printf("current=%lld desired=%lld\n", le64_to_cpu(ef.sb->sector_count), le64_to_cpu(sb.sector_count));
+    printf("current=%lld desired=%lld\n", le32_to_cpu(ef.sb->fat_sector_start), le32_to_cpu(sb.fat_sector_start));
+    printf("current=%lld desired=%lld\n", le32_to_cpu(ef.sb->fat_sector_count), le32_to_cpu(sb.fat_sector_count));
+
+    /* TODO RESIZE */
+
+	exfat_unmount(&ef);
+	printf("File system resized successfully.\n");
 	return 0;
 }

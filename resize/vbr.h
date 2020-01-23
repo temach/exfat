@@ -23,8 +23,9 @@
 #ifndef MKFS_VBR_H_INCLUDED
 #define MKFS_VBR_H_INCLUDED
 
-#include "mkexfat.h"
+#include "resize_exfat.h"
 
+void init_sb(struct exfat_super_block* sb);
 extern const struct fs_object vbr;
 
 #endif /* ifndef MKFS_VBR_H_INCLUDED */

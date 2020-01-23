@@ -20,7 +20,7 @@
 	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "mkexfat.h"
+#include "resize_exfat.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <inttypes.h>
@@ -134,12 +134,6 @@ int mkfs(struct exfat_dev* dev, off_t volume_size)
 	if (erase(dev) != 0)
 		return 1;
 	if (create(dev) != 0)
-		return 1;
-	puts("done.");
-
-	fputs("Flushing... ", stdout);
-	fflush(stdout);
-	if (exfat_fsync(dev) != 0)
 		return 1;
 	puts("done.");
 

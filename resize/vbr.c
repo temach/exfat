@@ -37,7 +37,7 @@ static off_t vbr_size(void)
 	return 12 * get_sector_size();
 }
 
-static void init_sb(struct exfat_super_block* sb)
+void init_sb(struct exfat_super_block* sb)
 {
 	uint32_t clusters_max;
 	uint32_t fat_sectors;
