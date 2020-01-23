@@ -22,7 +22,7 @@
 
 sbin_PROGRAMS = resize_exfat
 dist_man8_MANS = resize_exfat.8
-mkexfatfs_SOURCES = \
+resize_exfat_SOURCES = \
 	cbm.c \
 	cbm.h \
 	fat.c \
@@ -38,8 +38,8 @@ mkexfatfs_SOURCES = \
 	uctc.h \
 	vbr.c \
 	vbr.h
-mkexfatfs_CPPFLAGS = -I$(top_srcdir)/libexfat
-mkexfatfs_LDADD = ../libexfat/libexfat.a
+resize_exfat_CPPFLAGS = -I$(top_srcdir)/libexfat
+resize_exfat_LDADD = ../libexfat/libexfat.a
 
 install-exec-hook:
 	ln -sf $(sbin_PROGRAMS) $(DESTDIR)$(sbindir)/resize_exfat
