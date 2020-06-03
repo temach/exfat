@@ -20,7 +20,12 @@ PercentInUse - set to 0xFF
 
 
 
-
+Useful links:
+    - Specification: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/FileIO/exfat-specification.md
+    - Directory structure description: http://www.ntfs.com/exfat-directory-structure.htm
+    - Simple FAT explained: https://www.pjrc.com/tech/8051/ide/fat32.html
+    - Testing the filesystem 1: https://serverfault.com/questions/19487/how-to-do-filesystem-testing
+    - Testing the filesystem 2: https://stackoverflow.com/questions/21565865/filesystem-test-suites
 
 
 
